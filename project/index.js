@@ -1,49 +1,44 @@
-const database = require('./database')
-const { ApolloServer, gql } = require('apollo-server')
-const typeDefs = gql`
-  type Query {
-    teams: [Team]
-    team(id: Int): Team
-    equipments:[Equipment]
-    supplies: [Supply]
-  }
-  type Team {
-    id: Int
-    manager: String
-    office: String
-    extension_number: String
-    mascot: String
-    cleaning_duty: String
-    project: String
-    supplies: [Supply]
-  }
-  type Equipment {
-    id: String
-    used_by: String
-    count: Int
-    new_or_used: String
-  }
-  type Supply {
-    id: String
-    team: Int
-  }
-`
-const resolvers = {
-  Query: {
-    teams: () => database.teams
-      .map((team) => {
-          team.supplies = database.supplies
-          .filter((supply) => {
-              return supply.team === team.id
-          })
-          return team
-      }),
-    team: (parent,args,context,info) => database.teams.filter((team)=>{return team.id === args.id})[0],
-    equipments : () => database.equipments,
-    supplies : () => database.supplies
-  }
-}
-const server = new ApolloServer({ typeDefs, resolvers })
-server.listen().then(({ url }) => {
-console.log(`🚀  Server ready at ${url}`)
+const { ApolloServer } = require('apollo-server')
+
+const queries = require('./typedefs-resolvers/_queries')
+const mutations = require('./typedefs-resolvers/_mutations')
+const enums = require('./typedefs-resolvers/_enums')
+const teams = require('./typedefs-resolvers/teams')
+const people = require('./typedefs-resolvers/people')
+const roles = require('./typedefs-resolvers/roles')
+const equipments = require('./typedefs-resolvers/equipments')
+const softwares = require('./typedefs-resolvers/softwares')
+const supplies = require('./typedefs-resolvers/supplies')
+const tools = require('./typedefs-resolvers/tools')
+const givens = require('./typedefs-resolvers/givens')
+
+const typeDefs = [
+    queries,
+    mutations,
+    enums,
+    teams.typeDefs,
+    people.typeDefs,
+    roles.typeDefs,
+    equipments.typeDefs,
+    softwares.typeDefs,
+    supplies.typeDefs,
+    tools.typeDefs,
+    givens.typeDefs
+]
+
+const resolvers = [
+    teams.resolvers,
+    people.resolvers,
+    roles.resolvers,
+    equipments.resolvers,
+    softwares.resolvers,
+    supplies.resolvers,
+    tools.resolvers,
+    givens.resolvers
+]
+
+const server =  new ApolloServer({typeDefs, resolvers})
+
+server.listen().then(({url}) => {
+    console.log(`🚀  Server ready at ${url}`)
 })
